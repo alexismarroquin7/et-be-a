@@ -8,11 +8,10 @@ function generateJsonWebToken(payload, options){
 
 function generateJsonWebTokenForUser(user){
   const { properties } = user;
-  
   const payload = {
     subject: user.id,
-    email: properties.email,
-    role: properties.role.name
+    email: properties.email.email,
+    role: properties.role.select.name
   };
 
   const options = {

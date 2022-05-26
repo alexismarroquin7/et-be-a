@@ -13,7 +13,7 @@ const validateNewUserEmailUnique = () => {};
 const validatePassword = (req, res, next) => {
   const { password } = req.body;
   
-  const valid = bcrypt.compareSync(password, req.user.properties.password);
+  const valid = bcrypt.compareSync(password, req.user.properties.password.rich_text[0].text.content);
   
   if(valid){
     next();
@@ -76,6 +76,7 @@ const validateUserExists = async (req, res, next) => {
   } else {
     try {
       const user = await User.findByUserID(login);
+    
       if(user){
         req.user = user;
         next();
