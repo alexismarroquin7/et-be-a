@@ -21,10 +21,10 @@ router.post(
   validateUserExists,
   validatePassword,
   handleJWT,
-  async (req, res, next) => {
+  (req, res) => {
     res.status(200).json({
       user: req.user,
-      message: `Welcome back ${req.user.properties.userID}`,
+      message: `Welcome back ${req.user.properties.userID.rich_text.length > 0 && req.user.properties.userID.rich_text[0].text.content}`,
       token: req.token
     })
   }
