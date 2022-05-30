@@ -10,7 +10,7 @@ const {
 router.post(
   '/register',
   async (req, res, next) => {
-
+    res.end();
   }
 );
 
@@ -29,10 +29,6 @@ router.post(
     })
   }
 );
-
-router.get('/logout', async (req, res, next) => {
-
-});
 
 router.use((err, req, res, next) => { // eslint-disable-line
   res.status(err.status||500).json({

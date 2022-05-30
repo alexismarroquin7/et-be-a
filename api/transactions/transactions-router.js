@@ -1,11 +1,11 @@
 const router = require('express').Router();
+const { validateTransactionExistsById } = require('./transactions-middleware');
 const Transaction = require('./transactions-model')
 
 router.get(
   '/',
   async (req, res, next) => {
     const { query, decodedToken } = req;
-
     try {
       const transactions = await Transaction.findAll({
         ...query,
@@ -20,6 +20,33 @@ router.get(
   }
 );
 
+router.get('/:transaction_id', validateTransactionExistsById, (req, res) => {
+  res.status(200).json(req.transaction);
+});
+
+router.post(
+  '/',
+  async (req, res, next) => {
+    try {
+      const trx = await Transaction.create(req.body);
+      res.status(201).json(trx);
+    } catch (err) {
+      next(err);
+    }
+  }
+)
+
+router.put(
+  '/:transaction_id',
+  async (req, res, next) => {
+    try {
+      const transaction = await Transaction.updateById();
+      res.status(200).json(transaction);
+    } catch (err) {
+      next(err);
+    }
+  }
+)
 
 router.use((err, req, res, next) => { // eslint-disable-line
   res.status(err.status||500).json({

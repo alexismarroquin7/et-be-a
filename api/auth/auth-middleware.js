@@ -7,11 +7,21 @@ const { generateJsonWebTokenForUser } = require('../../utils/generate-jwt');
 const restricted = (req, res, next) => {
   const token = req.headers.authorization;
   if(!token){
-   res.status(401).json({ message: 'token required' });
+   res
+   .status(401)
+   .json({
+      message: "token required. please log in." 
+    });
+    
   } else {
     jwt.verify(token, JWT_SECRET, (err, decoded) => {
       if(err){
-        res.status(401).json({ message: "token invalid"});
+        res
+        .status(401)
+        .json({
+          message: "token is invalid or has expired. please log back in."
+        });
+        
       } else {
         req.decodedToken = decoded;
         next();

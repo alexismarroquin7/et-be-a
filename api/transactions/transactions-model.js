@@ -111,10 +111,94 @@ const findAll = async (
     });
   }
 
-
+  
   return transactions;
 }
 
+const create = async ({ userUUID, name = '', description = '', category, type, amount, date }) => {
+
+  const trx = await notion.pages.create({  
+    parent: {
+      database_id: NOTION_DB_TRANSACTIONS
+    },
+    properties: {
+      name: {
+        title: [
+          {
+            type: "text",
+            text: {
+              content: name
+            }
+          }
+        ]
+      },
+      description: {
+        rich_text: [
+          {
+            type: "text",
+            text: {
+              content: description
+            }
+          }
+        ]
+      },
+      type: {
+        select: {
+          name: type
+        }
+      },
+      amount: {
+        number: type === 'withdrawal' ? (Number(amount) * -1) : Number(amount)
+      },
+      date: {
+        date: {
+          start: date
+        }
+      },
+      category: {
+        select: {
+          name: category
+        }
+      },
+      user: {
+        relation: [
+          {
+            id: userUUID
+          }
+        ]
+      },
+    }
+  });
+
+  return trx;
+}
+
+const findById = async (transaction_id) => {
+  
+  const trx = await notion.databases.query({
+    database_id: NOTION_DB_TRANSACTIONS,
+  });
+
+  const matchingPages = trx.results
+  .filter(page => page.id === transaction_id);
+
+  return matchingPages.length === 1
+  ? matchingPages[0]
+  : null;
+
+}
+
+const updateById = async (transaction_id, changes) => {
+  const trx = await findById(transaction_id);
+
+  
+
+  return {};
+}
+
 module.exports = {
-  findAll
+  findAll,
+  create,
+  updateById,
+  findById
 }
