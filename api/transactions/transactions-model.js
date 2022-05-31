@@ -190,10 +190,81 @@ const findById = async (transaction_id) => {
 
 const updateById = async (transaction_id, changes) => {
   const trx = await findById(transaction_id);
-
   
+  let page = {
+    page_id: transaction_id,
+    properties: {}
+  }
 
-  return {};
+  if(typeof changes.name === "string"){
+    page.properties.name = {
+      title: [
+        {
+          type: "text",
+          text: {
+            content: changes.name
+          }
+        }
+      ]
+    }
+  } else {
+    page.properties.name = trx.properties.name;
+  }
+  
+  if(typeof changes.description === "string"){
+    page.properties.description = {
+      rich_text: [
+        {
+          type: "text",
+          text: {
+            content: changes.description
+          }
+        }
+      ]
+    }
+  } else {
+    page.properties.description = trx.properties.description;
+  }
+  
+  
+  page.properties.date = { 
+    date: {
+      start: changes.date
+    }
+  }
+
+  page.properties.amount = { 
+    number: changes.type === 'withdrawal' 
+    ? (Number(changes.amount) * -1) 
+    : Number(changes.amount)
+  }
+  
+  page.properties.category = {
+    select: {
+      name: changes.category
+    }
+  }
+  
+  page.properties.type = {
+    select: {
+      name: changes.type
+    }
+  }
+  
+  page.properties.user = {
+    relation: [
+      {
+        id: changes.userUUID
+      }
+    ]
+  }
+
+
+  await notion.pages.update(page);
+  
+  const updatedTrx = await findById(transaction_id);
+
+  return updatedTrx;
 }
 
 const deleteById = async (transaction_id) => {
