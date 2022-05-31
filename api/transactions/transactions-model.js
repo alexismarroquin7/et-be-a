@@ -196,9 +196,21 @@ const updateById = async (transaction_id, changes) => {
   return {};
 }
 
+const deleteById = async (transaction_id) => {
+  const trx = await findById(transaction_id);
+
+  await notion.pages.update({
+    page_id: transaction_id,
+    archived: true
+  });
+
+  return { id: trx.id };
+}
+
 module.exports = {
   findAll,
   create,
   updateById,
-  findById
+  findById,
+  deleteById
 }

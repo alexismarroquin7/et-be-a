@@ -48,6 +48,15 @@ router.put(
   }
 )
 
+router.delete('/:transaction_id', validateTransactionExistsById, async (req, res, next) => {
+  try {
+    const trx = await Transaction.deleteById(req.transaction.id);
+    res.status(200).json(trx);
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.use((err, req, res, next) => { // eslint-disable-line
   res.status(err.status||500).json({
     message: err.message,
