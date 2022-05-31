@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { validateTransactionExistsById } = require('./transactions-middleware');
+const { validateTransactionExistsById, validateTransactionRequiredFields } = require('./transactions-middleware');
 const Transaction = require('./transactions-model')
 
 router.get(
@@ -26,6 +26,7 @@ router.get('/:transaction_id', validateTransactionExistsById, (req, res) => {
 
 router.post(
   '/',
+  validateTransactionRequiredFields,
   async (req, res, next) => {
     try {
       const trx = await Transaction.create(req.body);
@@ -38,15 +39,30 @@ router.post(
 
 router.put(
   '/:transaction_id',
+  validateTransactionExistsById,
+  validateTransactionRequiredFields,
   async (req, res, next) => {
     try {
-      const transaction = await Transaction.updateById();
+      const transaction = await Transaction.updateById(req.params.transaction_id, req.body);
       res.status(200).json(transaction);
     } catch (err) {
       next(err);
     }
   }
 )
+
+router.delete(
+  '/:transaction_id',
+  validateTransactionExistsById,
+  async (req, res, next) => {
+    try {
+      const trx = await Transaction.deleteById(req.transaction.id);
+      res.status(200).json(trx);
+    } catch (err) {
+      next(err);
+    }
+  }
+);
 
 router.use((err, req, res, next) => { // eslint-disable-line
   res.status(err.status||500).json({
