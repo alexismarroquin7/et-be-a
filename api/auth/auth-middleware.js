@@ -1,31 +1,15 @@
 const User = require('../users/users-model');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken')
-const { JWT_SECRET } = require('../../config');
-const { generateJsonWebTokenForUser } = require('../../utils/generate-jwt');
+const { generateJsonWebTokenToRegister } = require('../../utils/generate-jwt');
+const { sendRegisterEmail: handleRegisterEmail } = require('../../utils/send-mail');
 
 const restricted = (req, res, next) => {
-  const token = req.headers.authorization;
-  if(!token){
-   res
-   .status(401)
-   .json({
-      message: "token required. please log in." 
-    });
-    
+  if(req.session.user){
+    next();
   } else {
-    jwt.verify(token, JWT_SECRET, (err, decoded) => {
-      if(err){
-        res
-        .status(401)
-        .json({
-          message: "token is invalid or has expired. please log back in."
-        });
-        
-      } else {
-        req.decodedToken = decoded;
-        next();
-      }
+    next({
+      status: 401,
+      message: 'You are not logged in or your session has expired.'
     });
   }
 };
@@ -42,6 +26,7 @@ const validatePassword = (req, res, next) => {
   const valid = bcrypt.compareSync(password, req.user.properties.password.rich_text[0].text.content);
   
   if(valid){
+    req.session.user = req.user;
     next();
   
   } else {
@@ -49,16 +34,6 @@ const validatePassword = (req, res, next) => {
       status: 400,
       message: "incorrect password"
     });
-  }
-};
-
-const handleJWT = (req, res, next) => {
-  try {
-    const token = generateJsonWebTokenForUser(req.user);
-    req.token = token;
-    next();
-  } catch (err) {
-    next(err);
   }
 };
 
@@ -135,15 +110,75 @@ const handlePasswordHash = (req, res, next) => {
   }
 }
 
+const validateRegisterRequestRequiredFields = (req, res, next) => {
+  const { email } = req.body;
+
+  if(typeof email === "undefined" || email.length === 0){
+    next({
+      status: 400,
+      message: 'email is required'
+    });
+  } else {
+    next();
+  }
+
+}
+
+const handleRegisterJWT = async (req, res, next) => {
+  const { email } = req.body;
+
+  const token = generateJsonWebTokenToRegister({
+    subject: email,
+    email
+  });
+
+  req.token = token;
+  next();
+}
+
+const sendRegisterEmail = async (req, res, next) => {
+  try {
+    
+    await handleRegisterEmail({
+      to: req.body.email
+    });
+    
+    next();
+
+  } catch (err) {
+    next(err);
+  }
+}
+
+const validateEmailUnique = async (req, res, next) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findByEmail(email);
+    if(!user){
+      next();
+    } else {
+      next({
+        status: 400,
+        message: 'user already has an account'
+      });
+    }
+  } catch (err) {
+    next(err);
+  }
+}
+
 
 module.exports = {
   validatePassword,
   handlePasswordHash,
-  handleJWT,
   restricted,
   only,
   validateNewUserRequiredFields,
   validateNewUserEmailUnique,
   validateLoginRequiredFields,
   validateUserExists,
+  validateRegisterRequestRequiredFields,
+  handleRegisterJWT,
+  sendRegisterEmail,
+  validateEmailUnique
 }
