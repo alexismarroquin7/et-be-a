@@ -23,7 +23,23 @@ function generateJsonWebTokenForUser(user){
   return token;
 }
 
+function generateJsonWebTokenToRegister ({ subject = '', email = '' }) {
+  const payload = {
+    subject,
+    email
+  };
+
+  const options = {
+    expiresIn: '1d'
+  };
+
+  const token = generateJsonWebToken(payload, options);
+  
+  return token;
+}
+
 module.exports = {
+  generateJsonWebTokenToRegister,
   generateJsonWebTokenForUser,
   generateJsonWebToken
 }

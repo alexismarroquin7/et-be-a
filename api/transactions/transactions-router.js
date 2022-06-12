@@ -5,12 +5,12 @@ const Transaction = require('./transactions-model')
 router.get(
   '/',
   async (req, res, next) => {
-    const { query, decodedToken } = req;
+    const { query, session } = req;
     try {
       const transactions = await Transaction.findAll({
         ...query,
-        userUUID: decodedToken.role === 'user' 
-        ? decodedToken.subject
+        userUUID: session.user.properties.role.select.name === 'user' 
+        ? session.user.id
         : query.userUUID
       });
       res.status(200).json(transactions);
